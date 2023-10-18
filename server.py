@@ -1,35 +1,41 @@
-import requests
-from bs4 import BeautifulSoup
 import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from bs4 import BeautifulSoup
 
 # URL of the website you want to scrape
-url = 'https://backoffice.linqqs.com/#nbc'  
+url = 'https://backoffice.linqqs.com/#nbc'
 
-# Replace this with the URL of the website you want to scrape
+# Set up a headless Chrome browser
+options = webdriver.ChromeOptions()
+options.add_argument('--headless')  # Run Chrome in headless mode (no GUI)
+driver = webdriver.Chrome(options=options)
 
-# Send an HTTP GET request to the URL
-response = requests.get(url)
+# Send an HTTP GET request to the URL using the headless browser
+driver.get(url)
 
-time.sleep(5)
+# Wait for a specific element to load (you can modify this to fit your needs)
+wait = WebDriverWait(driver, 10)
+element = wait.until(EC.presence_of_element_located((By.ID, 'main-wrapper')))
 
-# Check if the request was successful (status code 200)
-if response.status_code == 200:
-    # Parse the HTML content of the page using Beautiful Soup
-    soup = BeautifulSoup(response.text, 'html.parser')
+# Get the page source after it has loaded
+page_source = driver.page_source
 
-    # Find and extract the titles of articles (modify as needed)
-    article_titles = soup.find_all('h1') 
-    body = soup.body
-    first = body.find(id='main-wrapper')
-    second = first.find(class_="MBanimate fadeInDown splash background-white")
+# Close the headless browser
+driver.quit()
+
+# Parse the HTML content of the page using Beautiful Soup
+soup = BeautifulSoup(page_source, 'html.parser')
+
+# Find and extract the titles of articles (modify as needed)
+article_titles = soup.find_all('div')
+
+inputForm = driver.find_element(By.ID, "loginName")
+
+for title in article_titles:
+    print(title.text)
     
-    print(body)
-    
-    for title in article_titles:
-        print(body)
-        
-    # for input in inputs:
-    #     print("input")
-
-else:
-    print('Failed to retrieve the web page. Status code:', response.status_code)
+if inputForm:
+    print("Found Input")
